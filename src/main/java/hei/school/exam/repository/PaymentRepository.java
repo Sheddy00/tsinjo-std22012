@@ -1,4 +1,10 @@
-package hei.school.exam.repository.operation;
+package hei.school.exam.repository;
 
-public class PaymentRepository {
+import hei.school.exam.domaine.model.PaymentStatus;
+import java.util.List;
+
+public interface PaymentRepository {
+  List<Long> findIdsByStatus(PaymentStatus status);
+
+  void updateStatus(Long paymentId, PaymentStatus newStatus);
 }
