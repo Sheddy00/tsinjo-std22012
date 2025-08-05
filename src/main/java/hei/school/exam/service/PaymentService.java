@@ -5,12 +5,14 @@ import hei.school.exam.repository.PaymentRepository;
 import hei.school.exam.vola.VolaPaymentRequest;
 import hei.school.exam.vola.VolaPaymentResponse;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Service
 public class PaymentService {
   private final RestTemplate restTemplate = new RestTemplate();
@@ -27,6 +29,7 @@ public class PaymentService {
   }
 
   public String createPaymentWithVola(String method, Long amount) {
+    log.info("Creating payment with method={} and amount={}", method, amount);
     HttpHeaders headers = new HttpHeaders();
     headers.set("x-api-key", apiKey);
     headers.setContentType(MediaType.APPLICATION_JSON);
@@ -43,12 +46,16 @@ public class PaymentService {
 
   @Scheduled(fixedDelay = 10000)
   public void checkPendingPayments() {
+    log.info("Checking pending payments...");
     List<Long> pendingPayments = paymentRepository.findIdsByStatus(PaymentStatus.VERIFYING);
 
     for (Long paymentId : pendingPayments) {
       String volaStatus = getPaymentStatusFromVola(paymentId);
       if ("SUCCEEDED".equals(volaStatus) || "FAILED".equals(volaStatus)) {
         paymentRepository.updateStatus(paymentId, PaymentStatus.valueOf(volaStatus));
+      }
+      if ("FAILED".equals(volaStatus)) {
+        log.warn("Payment {} failed at Vola", paymentId);
       }
     }
   }

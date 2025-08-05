@@ -23,8 +23,6 @@ public class DonationService {
 
     Donation donation = new Donation(null, donor, payment);
     donR.save(donation);
-
-    // Ici on pourra appeler Vola pour vérifier le paiement en async
   }
 
   public List<Donation> listDonations() {
